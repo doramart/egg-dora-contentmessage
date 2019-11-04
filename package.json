@@ -1,6 +1,6 @@
 {
   "name": "egg-dora-contentmessage",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "contentMessage",
   "eggPlugin": {
     "name": "doraContentMessage"
@@ -53,7 +53,7 @@
     "url": "git+https://github.com/doramart/egg-dora-contentmessage.git"
   },
   "bugs": {
-    "url": "https://github.com/doramart/egg/issues"
+    "url": "https://github.com/doramart/egg-dora-contentmessage/issues"
   },
   "homepage": "https://github.com/doramart/egg-dora-contentmessage#readme",
   "author": "doramart",
