@@ -52,11 +52,10 @@ exports.doraContentMessage = {
         details: '获取留言列表',
     }],
 
-    initData: 'contentmessages.json', // 初始化数据脚本
+    initData: '', // 初始化数据脚本
     pluginsConfig: ` 
     exports.doraContentMessage = {\n
-        enable: true,\n
-        \n
+        enable: true,\n        package: 'egg-dora-contentmessage',
     };\n
     `, // 插入到 plugins.js 中的配置
     defaultConfig: `
