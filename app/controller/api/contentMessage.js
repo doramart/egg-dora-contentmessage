@@ -82,6 +82,80 @@ let ContentMessageController = {
 
 
 
+    /**
+     * @api {get} /api/contentMessage/getMessages 获取评论列表
+     * @apiDescription 获取评论列表 带分页
+     * @apiName /contentMessage/getMessages
+     * @apiGroup ContentMessage
+     * @apiParam {string} current 当前页码
+     * @apiParam {string} pageSize 每页记录数
+     * @apiParam {string} userId 获取指定用户的评论,传用户id
+     * @apiParam {string} contentId 获取指定文章的评论,传文档id
+     * @apiParam {string} token 登录时返回的参数鉴权
+     * @apiSuccess {json} result
+     * @apiSuccessExample {json} Success-Response:
+     *{
+     *  "status": 200,
+     *  "message": "操作成功 message",
+     *  "server_time": 1542899024811,
+     *  "data": [
+     *    {
+     *  "_id": "tYVGV-HTL",
+     *  "author": {
+     *     "_id": "zwwdJvLmP",
+     *     "userName": "doramart",
+     *     "logo": "/upload/images/defaultlogo.png",
+     *     "date": "2018-11-13 12:09:29",
+     *     "enable": true,
+     *     "id": "zwwdJvLmP"
+     *   },
+     *  "contentId": {
+     *  "_id": "R8_iIMwF1",
+     *  "title": "海底捞的致命缺点是什么？",
+     *  "stitle": "海底捞的致命缺点是什么？",
+     *  "updateDate": "2018-11-22",
+     *  "date": "2018-11-22 23:03:44",
+     *  "id": "R8_iIMwF1"
+     *      },
+     *  "__v": 0,
+     *  "content": "这也是一条留言",
+     *  "hasPraise": false,
+     *  "praiseNum": 0,
+     *  "date": "3 天前",
+     *  "utype": "0",
+     *  "id": "tYVGV-HTL"
+     *    },
+     *    {
+     *  "_id": "4wv0tcLjH",
+     *  "author": {
+     *  "_id": "zwwdJvLmP",
+     *  "userName": "doramart",
+     *  "logo": "/upload/images/defaultlogo.png",
+     *  "date": "2018-11-13 12:09:29",
+     *  "enable": true,
+     *  "id": "zwwdJvLmP"
+     *      },
+     *  "contentId": {
+     *  "_id": "vGVoKV0g_",
+     *  "title": "有哪一刹那让你对日本的美好印象瞬间破灭？",
+     *  "stitle": "有哪一刹那让你对日本的美好印象瞬间破灭？",
+     *  "updateDate": "2018-11-22",
+     *  "date": "2018-11-22 23:03:44",
+     *  "id": "vGVoKV0g_"
+     *      },
+     *  "__v": 0,
+     *  "content": "这是一条留言",
+     *  "hasPraise": false,
+     *  "praiseNum": 0,
+     *  "date": "3 天前",
+     *  "utype": "0",
+     *  "id": "4wv0tcLjH"
+     *    }
+     *  ]
+     *}
+     * @apiSampleRequest http://localhost:8080/api/contentMessage/getMessages
+     * @apiVersion 1.0.0
+     */
     async list(ctx, app) {
 
         try {
@@ -127,6 +201,28 @@ let ContentMessageController = {
         }
     },
 
+
+    /**
+     * @api {post} /api/contentMessage/postMessages 帖子评论/留言
+     * @apiDescription 帖子评论/留言，需要登录态
+     * @apiName /contentMessage/postMessages
+     * @apiGroup ContentMessage
+     * @apiParam {string} token 登录时返回的参数鉴权
+     * @apiParam {string} contentId 帖子ID
+     * @apiParam {string} replyAuthor 回复者ID (二级留言必填)
+     * @apiParam {string} relationMsgId 回复目标留言ID (二级留言必填)
+     * @apiParam {string} content 评论内容
+     * @apiSuccess {json} result
+     * @apiSuccessExample {json} Success-Response:
+     *{
+     *    "status": 200,
+     *    "message": "操作成功！",
+     *    "server_time": 1543372263586,
+     *    "data": {}
+     *}
+     * @apiSampleRequest http://localhost:8080/api/contentMessage/postMessages
+     * @apiVersion 1.0.0
+     */
     async postMessages(ctx, app) {
 
 
@@ -155,6 +251,7 @@ let ContentMessageController = {
                 contentId: fields.contentId,
                 content: xss(fields.content),
                 replyAuthor: fields.replyAuthor,
+                adminReplyAuthor: fields.adminReplyAuthor,
                 author: ctx.session.user._id,
                 relationMsgId: fields.relationMsgId,
                 utype: fields.utype || '0',
@@ -164,9 +261,6 @@ let ContentMessageController = {
             let targetMessage = await ctx.service.message.create(messageObj);
 
             // 给被回复用户发送提醒邮件
-            const systemConfigs = await ctx.service.systemConfig.find({
-                isPaging: '0'
-            });
             const contentInfo = await ctx.service.content.item(ctx, {
                 query: {
                     _id: fields.contentId
@@ -176,25 +270,29 @@ let ContentMessageController = {
             let replyAuthor;
 
             if (fields.replyAuthor) {
-                replyAuthor = await UserModel.findOne({
-                    _id: fields.replyAuthor
-                }, getAuthUserFields())
                 replyAuthor = await ctx.service.user.item(ctx, {
                     query: {
                         _id: fields.replyAuthor
                     },
-                    files: getAuthUserFields()
+                    files: "id userName category group logo date enable state email"
+                })
+            } else if (fields.adminReplyAuthor) {
+                replyAuthor = await ctx.service.adminUser.item(ctx, {
+                    query: {
+                        _id: fields.adminReplyAuthor
+                    },
+                    files: "id userName email"
                 })
             }
 
-            if (!_.isEmpty(systemConfigs) && !_.isEmpty(contentInfo) && !_.isEmpty(replyAuthor)) {
-                let mailParams = {
+            await ctx.helper.reqJsonData('mailTemplate/sendEmail', {
+                tempkey: "6",
+                info: {
                     replyAuthor: replyAuthor,
                     content: contentInfo,
                     author: ctx.session.user
                 }
-                ctx.helper.sendEmail(systemConfigs[0], emailTypeKey.email_notice_user_contentMsg, mailParams);
-            }
+            }, "post");
 
             // 发送消息给客户端
             let passiveUser = fields.replyAuthor ? fields.replyAuthor : contentInfo.uAuthor;

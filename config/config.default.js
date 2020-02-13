@@ -17,7 +17,7 @@ exports.doraContentMessage = {
     isindex: 0, // 是否需要前台访问，1：需要，0：不需要,入口地址:'/ext/devteam/index/index'
     version: pkgInfo.version, // 版本号
     iconName: 'icon_service', // 主菜单图标名称
-    adminUrl: 'https://cdn.html-js.cn/cms/plugins/static/admin/contentMessage/js/app.js',
+    adminUrl: '/contentMessage/js/app.js',
     adminApi: [{
         url: 'contentMessage/getList',
         method: 'get',
@@ -52,11 +52,10 @@ exports.doraContentMessage = {
         details: '获取留言列表',
     }],
 
-    initData: 'contentmessages.json', // 初始化数据脚本
+    initData: '', // 初始化数据脚本
     pluginsConfig: ` 
     exports.doraContentMessage = {\n
-        enable: true,\n
-        \n
+        enable: true,\n        package: 'egg-dora-contentmessage',
     };\n
     `, // 插入到 plugins.js 中的配置
     defaultConfig: `
