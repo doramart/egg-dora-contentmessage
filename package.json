@@ -1,6 +1,6 @@
 {
   "name": "egg-dora-contentmessage",
-  "version": "1.0.2",
+  "version": "1.0.8",
   "description": "contentMessage",
   "eggPlugin": {
     "name": "doraContentMessage"
@@ -15,7 +15,8 @@
     "moment": "^2.24.0",
     "lodash": "^4.17.15",
     "xss": "^1.0.6",
-    "egg-dora-reguser": "^1.0.0"
+    "egg-dora-reguser": "^1.0.0",
+    "egg-dora-mailtemplate": "^1.0.0"
   },
   "devDependencies": {
     "autod": "^3.0.1",
@@ -53,7 +54,7 @@
     "url": "git+https://github.com/doramart/egg-dora-contentmessage.git"
   },
   "bugs": {
-    "url": "https://github.com/doramart/egg/issues"
+    "url": "https://github.com/doramart/egg-dora-contentmessage/issues"
   },
   "homepage": "https://github.com/doramart/egg-dora-contentmessage#readme",
   "author": "doramart",
